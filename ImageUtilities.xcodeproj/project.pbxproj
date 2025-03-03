@@ -27,14 +27,23 @@
 		37D4CCD52D4FAEB200D4045B /* Exceptions for "ImageUtilities" folder in "ImageUtilities" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Dylib/libdeflate.0.dylib,
+				Dylib/libexpat.1.dylib,
+				Dylib/libiconv.2.dylib,
+				Dylib/libjpeg.8.dylib,
+				Dylib/libLerc.4.dylib,
+				Dylib/liblzma.5.dylib,
 				Dylib/libopencv_flann.412.dylib,
 				Dylib/libopencv_photo.412.dylib,
+				Dylib/libz.1.dylib,
+				Dylib/libzstd.1.dylib,
 				Scripts/copy_deps.sh,
 				Scripts/fixlibs.sh,
 			);
 			publicHeaders = (
 				Headers/ImageAligner.h,
 				Headers/ImageUtilitiesFramework.h,
+				Headers/MetadataManager.h,
 			);
 			target = 37D4CCCF2D4FAEB200D4045B /* ImageUtilities */;
 		};
@@ -46,6 +55,9 @@
 			attributesByRelativePath = {
 				Dylib/libLerc.4.dylib = (CodeSignOnCopy, );
 				Dylib/libdeflate.0.dylib = (CodeSignOnCopy, );
+				Dylib/libexiv2.0.28.5.dylib = (CodeSignOnCopy, );
+				Dylib/libexpat.1.dylib = (CodeSignOnCopy, );
+				Dylib/libiconv.2.dylib = (CodeSignOnCopy, );
 				Dylib/libjpeg.8.dylib = (CodeSignOnCopy, );
 				Dylib/liblzma.5.dylib = (CodeSignOnCopy, );
 				Dylib/libopencv_calib3d.412.dylib = (CodeSignOnCopy, );
@@ -62,6 +74,9 @@
 			buildPhase = 37F02E2A2D6306F100B95428 /* Embed Libraries */;
 			membershipExceptions = (
 				Dylib/libdeflate.0.dylib,
+				Dylib/libexiv2.0.28.5.dylib,
+				Dylib/libexpat.1.dylib,
+				Dylib/libiconv.2.dylib,
 				Dylib/libjpeg.8.dylib,
 				Dylib/libLerc.4.dylib,
 				Dylib/liblzma.5.dylib,
