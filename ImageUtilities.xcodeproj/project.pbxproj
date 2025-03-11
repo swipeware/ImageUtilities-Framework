@@ -235,6 +235,8 @@
 /* Begin XCBuildConfiguration section */
 		37D4CCD72D4FAEB200D4045B /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 37D4CCD22D4FAEB200D4045B /* ImageUtilities */;
+			baseConfigurationReferenceRelativePath = Config/ImageUtilitiesVersion.xcconfig;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
@@ -242,8 +244,6 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = LZP8HWV4LE;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_MODULE_VERIFIER = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -278,6 +278,8 @@
 		};
 		37D4CCD82D4FAEB200D4045B /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 37D4CCD22D4FAEB200D4045B /* ImageUtilities */;
+			baseConfigurationReferenceRelativePath = Config/ImageUtilitiesVersion.xcconfig;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
@@ -285,8 +287,6 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = LZP8HWV4LE;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_MODULE_VERIFIER = YES;
 				GENERATE_INFOPLIST_FILE = YES;
