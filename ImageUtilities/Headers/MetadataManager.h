@@ -22,6 +22,16 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSDictionary<NSString *, NSString *> *)getMetadata:(NSString *)filePath
                                              exiv2Ids:(NSArray<NSString *> *)tagIds;
 
+- (int)copyExifFrom:(NSString *)srcPath
+                 to:(NSString *)destPath
+       softwareName:(nullable NSString *)softwareName
+     filterExifKeys:(NSArray<NSString *> *)filterExifKeys
+filterExifKeysCount:(int)filterExifKeysCount
+      filterXmpKeys:(NSArray<NSString *> *)filterXmpKeys
+ filterXmpKeysCount:(int)filterXmpKeysCount;
+
+- (int)copyICCProfileFrom:(NSString *)srcPath to:(NSString *)destPath;
+
 @end
 
 NS_ASSUME_NONNULL_END

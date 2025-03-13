@@ -171,6 +171,107 @@ public:
     return exifData;
   }
   
+  int copyExif(const std::string& srcPath, const std::string& destPath,
+               const std::string& softwareName,
+               const std::vector<std::string>& filterExifKeys, int filterExifKeysCount,
+               const std::vector<std::string>& filterXmpKeys, int filterXmpKeysCount)
+  {
+    try {
+      std::unique_ptr<Exiv2::Image> srcImg = Exiv2::ImageFactory::open(srcPath);
+      std::unique_ptr<Exiv2::Image> destImg = Exiv2::ImageFactory::open(destPath);
+      if (!srcImg || !destImg) return -1;
+      
+      srcImg->readMetadata();
+      
+      Exiv2::ExifData exifData = srcImg->exifData();
+      Exiv2::XmpData xmpData = srcImg->xmpData();
+      Exiv2::IptcData iptcData = srcImg->iptcData();
+      
+      // Remove all thumbnail metadata from exif
+      for (auto iterator = exifData.begin(); iterator != exifData.end(); ) {
+        if (iterator->key().find("Exif.Thumbnail") == 0) {
+          iterator = exifData.erase(iterator);  // Erase and move iterator to next valid entry
+        }
+        else {
+          ++iterator;
+        }
+      }
+      
+      // Remove all thumbnail metadata from xmp
+      for (auto iterator = xmpData.begin(); iterator != xmpData.end(); ) {
+        if (iterator->key().find("Xmp.Thumbnail") == 0) {
+          iterator = xmpData.erase(iterator);  // Erase and move iterator to next valid entry
+        }
+        else {
+          ++iterator;
+        }
+      }
+      
+      // Remove specified Exif keys
+      for (int i = 0; i < filterExifKeysCount; ++i) {
+        Exiv2::ExifKey key(filterExifKeys[i]);
+        auto pos = exifData.findKey(key);
+        if (pos != exifData.end()) {
+          exifData.erase(pos);
+        }
+      }
+      
+      // Remove specified xmp keys
+      for (int i = 0; i < filterXmpKeysCount; ++i) {
+        Exiv2::XmpKey key(filterXmpKeys[i]);
+        auto pos = xmpData.findKey(key);
+        if (pos != xmpData.end()) {
+          xmpData.erase(pos);
+        }
+      }
+      
+      // Brand with software name
+      if (!softwareName.empty()) {
+        exifData["Exif.Image.Software"] = softwareName;
+        if (!xmpData.empty()) {
+          xmpData["Xmp.tiff.Software"] = softwareName;
+        }
+      }
+      
+      destImg->setExifData(exifData); // Replaces all EXIF metadata
+      destImg->clearXmpData();        // Make sure to remove old XMP data first (merges by default)
+      destImg->setXmpData(xmpData);   // Set new XMP data
+      destImg->setIptcData(iptcData); // Replaces all IPTC data
+      destImg->writeMetadata();
+      
+      return 1; // Success
+    }
+    catch (...) {
+      return 0; // Error
+    }
+  }
+  
+  int copyICCProfile(const std::string& srcPath, const std::string& destPath) {
+    try {
+      std::unique_ptr<Exiv2::Image> srcImg = Exiv2::ImageFactory::open(srcPath);
+      std::unique_ptr<Exiv2::Image> destImg = Exiv2::ImageFactory::open(destPath);
+      if (!srcImg || !destImg) return -1;
+      
+      srcImg->readMetadata();
+      destImg->readMetadata();
+      
+      // Check if source image has an ICC profile
+      Exiv2::DataBuf iccProfile = srcImg->iccProfile();
+      if (iccProfile.size() == 0) {
+        return 2; // No ICC profile in source image
+      }
+      
+      // Copy the ICC profile to destination
+      destImg->setIccProfile(std::move(iccProfile));
+      destImg->writeMetadata();
+      
+      return 1; // Success
+    }
+    catch (...) {
+      return 0; // Error
+    }
+  }
+  
 }; // class
 } // namespace
 
@@ -222,6 +323,45 @@ public:
   }
 
   return result;
+}
+
+- (int)copyExifFrom:(NSString *)srcPath
+                 to:(NSString *)destPath
+      softwareName:(nullable NSString *)softwareName
+   filterExifKeys:(NSArray<NSString *> *)filterExifKeys
+filterExifKeysCount:(int)filterExifKeysCount
+    filterXmpKeys:(NSArray<NSString *> *)filterXmpKeys
+ filterXmpKeysCount:(int)filterXmpKeysCount {
+
+    // Convert NSString to std::string
+    std::string cppSrcPath = [srcPath UTF8String];
+    std::string cppDestPath = [destPath UTF8String];
+    std::string cppSoftwareName = softwareName ? [softwareName UTF8String] : "";
+
+    // Convert NSArray to std::vector<std::string>
+    std::vector<std::string> cppFilterExifKeys;
+    for (NSString *key in filterExifKeys) {
+        cppFilterExifKeys.push_back([key UTF8String]);
+    }
+
+    std::vector<std::string> cppFilterXmpKeys;
+    for (NSString *key in filterXmpKeys) {
+        cppFilterXmpKeys.push_back([key UTF8String]);
+    }
+
+    return _privateImpl->copyExif(cppSrcPath, cppDestPath,
+                                  cppSoftwareName,
+                                  cppFilterExifKeys, filterExifKeysCount,
+                                  cppFilterXmpKeys, filterXmpKeysCount);
+}
+
+- (int)copyICCProfileFrom:(NSString *)srcPath to:(NSString *)destPath {
+    // Convert NSString to std::string
+    std::string cppSrcPath = [srcPath UTF8String];
+    std::string cppDestPath = [destPath UTF8String];
+
+    // Call the C++ function
+    return _privateImpl->copyICCProfile(cppSrcPath, cppDestPath);
 }
 
 @end
