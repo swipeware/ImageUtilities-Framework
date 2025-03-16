@@ -25,10 +25,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (int)copyExifFrom:(NSString *)srcPath
                  to:(NSString *)destPath
        softwareName:(nullable NSString *)softwareName
-     filterExifKeys:(NSArray<NSString *> *)filterExifKeys
-filterExifKeysCount:(int)filterExifKeysCount
-      filterXmpKeys:(NSArray<NSString *> *)filterXmpKeys
- filterXmpKeysCount:(int)filterXmpKeysCount;
+     exifKeysFilter:(NSArray<NSString *> *)exifKeysFilter
+      exifKeysCount:(int)exifKeysCount
+      xmpKeysFilter:(NSArray<NSString *> *)xmpKeysFilter
+       xmpKeysCount:(int)xmpKeysCount;
 
 - (int)copyICCProfileFrom:(NSString *)srcPath to:(NSString *)destPath;
 
