@@ -7,8 +7,6 @@
 
 #import "MetadataManager.h"
 #include "exiv2/exiv2.hpp"
-#include <filesystem>
-#include <fstream>
 
 // Private internal class to handle Exiv2
 namespace {

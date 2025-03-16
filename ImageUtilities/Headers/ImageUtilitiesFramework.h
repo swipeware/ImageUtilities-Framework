@@ -7,6 +7,7 @@
 
 #import <Foundation/Foundation.h>
 #import <ImageUtilities/ImageAligner.h>
+#import <ImageUtilities/ImageFuser.h>
 #import <ImageUtilities/MetadataManager.h>
 
 //! Project version number for LibRaw.

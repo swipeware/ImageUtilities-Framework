@@ -27,6 +27,7 @@
 		37D4CCD52D4FAEB200D4045B /* Exceptions for "ImageUtilities" folder in "ImageUtilities" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Config/ImageUtilitiesVersion.xcconfig,
 				Dylib/libdeflate.0.dylib,
 				Dylib/libexpat.1.dylib,
 				Dylib/libiconv.2.dylib,
@@ -42,6 +43,7 @@
 			);
 			publicHeaders = (
 				Headers/ImageAligner.h,
+				Headers/ImageFuser.h,
 				Headers/ImageUtilitiesFramework.h,
 				Headers/MetadataManager.h,
 			);
