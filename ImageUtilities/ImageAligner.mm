@@ -29,10 +29,14 @@ public:
   float scaleFactor;
   
   ImageAlignerPrivate()
-    : matcher(cv::NORM_HAMMING, true)
+    : akaze(cv::AKAZE::create()),
+    matcher(cv::NORM_HAMMING, true),
+    refKeypoints(),       // default-initialized (empty vector)
+    refDescriptors(),     // default-initialized (empty cv::Mat)
+    refSize(),            // default-initialized (width=0, height=0)
+    scaleFactor(1.0f)
   {
-    akaze = cv::AKAZE::create();
-    NSLog(@"DEBUG: Successfully initialized ImageAligner");
+    NSLog(@"Initialized ImageAligner");
   }
   
   cv::Mat getLoresTransformImageFor(const cv::Mat& inputImage) {
