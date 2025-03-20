@@ -353,8 +353,8 @@ public:
   try {
     _privateImpl->setReferenceImage([referenceImagePath UTF8String], [outputPath UTF8String], isPreview);
   }
-  catch (const std::exception& e) {
-    NSLog(@"ERROR: Cannot set reference image: %s %s", [referenceImagePath UTF8String],  e.what());
+  catch (NSException *ex) {
+    NSLog(@"ERROR: Cannot set reference image: %@ %@", referenceImagePath, ex.reason);
   }
   catch (...) {
     NSLog(@"ERROR: Unknown error occurred in setReferenceImage");
@@ -365,8 +365,8 @@ public:
   try {
     _privateImpl->alignImage([imagePath UTF8String], [outputPath UTF8String], isPreview);
   }
-  catch (const std::exception& e) {
-    NSLog(@"ERROR: Cannot align image: %s %s", [imagePath  UTF8String], e.what());
+  catch (NSException *ex) {
+    NSLog(@"ERROR: Cannot align image: %@ %@", imagePath, ex.reason);
   }
   catch (...) {
     NSLog(@"ERROR: Unknown error occurred in alignImage");

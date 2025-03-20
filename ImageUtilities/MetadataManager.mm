@@ -171,8 +171,8 @@ public:
   
   int copyExif(const std::string& srcPath, const std::string& destPath,
                const std::string& softwareName,
-               const std::vector<std::string>& exifKeysFilter, int exifKeysCount,
-               const std::vector<std::string>& xmpKeysFilter, int xmpKeysCount)
+               const std::vector<std::string>& exifKeysFilter,
+               const std::vector<std::string>& xmpKeysFilter)
   {
     try {
       std::unique_ptr<Exiv2::Image> srcImg = Exiv2::ImageFactory::open(srcPath);
@@ -206,8 +206,8 @@ public:
       }
       
       // Remove specified Exif keys
-      for (int i = 0; i < exifKeysCount; ++i) {
-        Exiv2::ExifKey key(exifKeysFilter[i]);
+      for (const auto& exifKey : exifKeysFilter) {
+        Exiv2::ExifKey key(exifKey);
         auto pos = exifData.findKey(key);
         if (pos != exifData.end()) {
           exifData.erase(pos);
@@ -215,8 +215,8 @@ public:
       }
       
       // Remove specified xmp keys
-      for (int i = 0; i < xmpKeysCount; ++i) {
-        Exiv2::XmpKey key(xmpKeysFilter[i]);
+      for (const auto& xmpKey : xmpKeysFilter) {
+        Exiv2::XmpKey key(xmpKey);
         auto pos = xmpData.findKey(key);
         if (pos != xmpData.end()) {
           xmpData.erase(pos);
@@ -299,20 +299,17 @@ public:
 }
 
 - (NSDictionary<NSString *, NSString *> *)getMetadata:(NSString *)filePath
-                                             exiv2Ids:(NSArray<NSString *> *)tagIds {
-  // Convert NSString to std::string
+                                             exiv2Ids:(NSArray<NSString *> *)tagIds
+{
   std::string cppFilePath = [filePath UTF8String];
   
-  // Convert NSArray<NSString *> to std::vector<std::string>
   std::vector<std::string> cppTagIds;
   for (NSString *tag in tagIds) {
     cppTagIds.push_back([tag UTF8String]);
   }
   
-  // Call the C++ function
   std::unordered_map<std::string, std::string> exifData = _privateImpl->getMetadata(cppFilePath, cppTagIds);
   
-  // Convert std::unordered_map<std::string, std::string> to NSDictionary<NSString *, NSString *>
   NSMutableDictionary<NSString *, NSString *> *result = [NSMutableDictionary dictionary];
   for (const auto& pair : exifData) {
     NSString *key = [NSString stringWithUTF8String:pair.first.c_str()];
@@ -327,16 +324,12 @@ public:
                  to:(NSString *)destPath
        softwareName:(nullable NSString *)softwareName
      exifKeysFilter:(NSArray<NSString *> *)exifKeysFilter
-      exifKeysCount:(int)exifKeysCount
       xmpKeysFilter:(NSArray<NSString *> *)xmpKeysFilter
-       xmpKeysCount:(int)xmpKeysCount
 {
-  // Convert NSString to std::string
   std::string cppSrcPath = [srcPath UTF8String];
   std::string cppDestPath = [destPath UTF8String];
   std::string cppSoftwareName = softwareName ? [softwareName UTF8String] : "";
   
-  // Convert NSArray to std::vector<std::string>
   std::vector<std::string> cppExifKeysFilter;
   for (NSString *key in exifKeysFilter) {
     cppExifKeysFilter.push_back([key UTF8String]);
@@ -349,16 +342,14 @@ public:
   
   return _privateImpl->copyExif(cppSrcPath, cppDestPath,
                                 cppSoftwareName,
-                                cppExifKeysFilter, exifKeysCount,
-                                cppXmpKeysFilter, xmpKeysCount);
+                                cppExifKeysFilter,
+                                cppXmpKeysFilter);
 }
 
 - (int)copyICCProfileFrom:(NSString *)srcPath to:(NSString *)destPath {
-    // Convert NSString to std::string
     std::string cppSrcPath = [srcPath UTF8String];
     std::string cppDestPath = [destPath UTF8String];
 
-    // Call the C++ function
     return _privateImpl->copyICCProfile(cppSrcPath, cppDestPath);
 }
 
