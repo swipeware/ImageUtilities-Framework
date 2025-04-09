@@ -36,7 +36,7 @@ public:
     refSize(),            // default-initialized (width=0, height=0)
     scaleFactor(1.0f)
   {
-    NSLog(@"Initialized ImageAligner");
+    NSLog(@"INFO: Initialized ImageAligner");
   }
   
   cv::Mat getLoresTransformImageFor(const cv::Mat& inputImage) {
@@ -52,11 +52,11 @@ public:
                  cv::INTER_LINEAR);
     }
     catch (const std::exception& e) {
-      NSLog(@"OpenCV resize failed: %s", e.what());
+      NSLog(@"ERROR: OpenCV resize failed: %s", e.what());
       return cv::Mat();
     }
     catch (...) {
-      NSLog(@"Unknown exception occurred in getLoresTransformImageFor");
+      NSLog(@"ERROR: Unknown exception occurred in getLoresTransformImageFor");
       return cv::Mat();
     }
     
@@ -172,12 +172,10 @@ public:
   }
   
   void setReferenceImage(const std::string& imagePath, const std::string& outputFilePath, bool isPreview) {
-    NSLog(@"Start ref %@", [NSDate date]);
-    
     // Load the reference image in color
     cv::Mat referenceImage = loadLargestTIFFImage(imagePath);
     if (referenceImage.empty()) {
-      NSLog(@"Error: Failed to load reference image");
+      NSLog(@"ERROR: Failed to load reference image");
       return;
     }
     
@@ -187,7 +185,6 @@ public:
     // Calculate scale factor
     int maxSide = std::max(refSize.width, refSize.height);
     scaleFactor = maxSide < MIN_PIXELS ? 1 : static_cast<int>(std::floor(static_cast<double>(maxSide) / MIN_PIXELS));
-    NSLog(@"Scale factor %f", scaleFactor);
     
     // Get transformation image (downscaled if not preview)
     cv::Mat transformReference = isPreview ? referenceImage : getLoresTransformImageFor(referenceImage);
@@ -203,12 +200,11 @@ public:
     
     // Validate Keypoints
     if (refKeypoints.size() < 10) {
-      NSLog(@"Error: Not enough keypoints detected for reliable alignment");
+      NSLog(@"ERROR: Not enough keypoints detected for reliable alignment");
       return;
     }
     
     saveTIFFWithAlpha(referenceImage, outputFilePath);
-    NSLog(@"Stop ref %@", [NSDate date]);
   }
   
   int getImageBitDepth(cv::Mat mat) {
@@ -231,8 +227,6 @@ public:
   }
   
   void alignImage(const std::string& inputImagePath, const std::string& outputFilePath, bool isPreview) {
-    NSLog(@"Start:");
-    
     cv::Mat inputImage = loadLargestTIFFImage(inputImagePath);
     if (inputImage.empty()) {
       throw std::runtime_error("Failed to load input image.");
@@ -314,7 +308,6 @@ public:
     
     // Save the aligned image
     saveTIFFWithAlpha(transparentImage, outputFilePath);
-    NSLog(@"Stop:");
   }
 }; // class
 } // namespace
@@ -341,12 +334,12 @@ public:
 }
 
 - (void)dealloc {
-  NSLog(@"DEBUG: Successful ImageAligner dealloc");
+  NSLog(@"INFO: deallocated ImageAligner");
 }
 
 - (void)setReferenceImage:(NSString*)referenceImagePath outputPath:(NSString*)outputPath isPreview:(BOOL)isPreview {
   if (!referenceImagePath) {
-    NSLog(@"Error: referenceImagePath is nil");
+    NSLog(@"ERROR: referenceImagePath is nil");
     return;
   }
   
