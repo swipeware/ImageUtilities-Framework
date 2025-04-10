@@ -169,10 +169,17 @@ public:
     return exifData;
   }
   
-  int copyExif(const std::string& srcPath, const std::string& destPath,
-               const std::string& softwareName,
-               const std::vector<std::string>& exifKeysFilter,
-               const std::vector<std::string>& xmpKeysFilter)
+  bool startsWithAny(const std::string& key, const std::vector<std::string>& prefixes) {
+    for (const auto& prefix : prefixes) {
+      if (key.rfind(prefix, 0) == 0) return true;
+    }
+    return false;
+  }
+  
+  int copyMetadata(const std::string& srcPath, const std::string& destPath,
+                   const std::string& softwareName,
+                   std::vector<std::string>& exifKeysFilter,
+                   std::vector<std::string>& xmpKeysFilter)
   {
     try {
       std::unique_ptr<Exiv2::Image> srcImg = Exiv2::ImageFactory::open(srcPath);
@@ -181,27 +188,47 @@ public:
       
       srcImg->readMetadata();
       
+      // We need to remove the orientation tag as it's already been used when creating the processed image
+      xmpKeysFilter.emplace_back("Xmp.tiff.Orientation");
+      xmpKeysFilter.emplace_back("Xmp.exif.Orientation");
+      xmpKeysFilter.emplace_back("Xmp.xmp.Rotate");
+      exifKeysFilter.emplace_back("Exif.Image.Orientation");
+
       Exiv2::ExifData exifData = srcImg->exifData();
       Exiv2::XmpData xmpData = srcImg->xmpData();
       Exiv2::IptcData iptcData = srcImg->iptcData();
       
-      // Remove all thumbnail metadata from exif
-      for (auto iterator = exifData.begin(); iterator != exifData.end(); ) {
-        if (iterator->key().find("Exif.Thumbnail") == 0) {
-          iterator = exifData.erase(iterator);  // Erase and move iterator to next valid entry
+      // Keep only essential EXIF metadata
+      std::vector<std::string> allowedExifPrefixes = {
+        "Exif.Image.",
+        "Exif.Photo.",
+        "Exif.GPSInfo."
+      };
+
+      for (auto it = exifData.begin(); it != exifData.end(); ) {
+        if (!startsWithAny(it->key(), allowedExifPrefixes)) {
+          it = exifData.erase(it);
         }
         else {
-          ++iterator;
+          ++it;
         }
       }
       
-      // Remove all thumbnail metadata from xmp
-      for (auto iterator = xmpData.begin(); iterator != xmpData.end(); ) {
-        if (iterator->key().find("Xmp.Thumbnail") == 0) {
-          iterator = xmpData.erase(iterator);  // Erase and move iterator to next valid entry
+      // Keep only essential XMP metadata
+      std::vector<std::string> allowedXmpPrefixes = {
+        "Xmp.dc.",
+        "Xmp.photoshop.",
+        "Xmp.tiff.",
+        "Xmp.xmp.",
+        "Xmp.xmpRights."
+      };
+
+      for (auto it = xmpData.begin(); it != xmpData.end(); ) {
+        if (!startsWithAny(it->key(), allowedXmpPrefixes)) {
+          it = xmpData.erase(it);
         }
         else {
-          ++iterator;
+          ++it;
         }
       }
       
@@ -231,10 +258,10 @@ public:
         }
       }
       
-      destImg->setExifData(exifData); // Replaces all EXIF metadata
-      destImg->clearXmpData();        // Make sure to remove old XMP data first (merges by default)
-      destImg->setXmpData(xmpData);   // Set new XMP data
-      destImg->setIptcData(iptcData); // Replaces all IPTC data
+      destImg->clearMetadata();
+      destImg->setExifData(exifData);
+      destImg->setXmpData(xmpData);
+      destImg->setIptcData(iptcData);
       destImg->writeMetadata();
       
       return 1; // Success
@@ -320,11 +347,11 @@ public:
   return result;
 }
 
-- (int)copyExifFrom:(NSString *)srcPath
-                 to:(NSString *)destPath
-       softwareName:(nullable NSString *)softwareName
-     exifKeysFilter:(NSArray<NSString *> *)exifKeysFilter
-      xmpKeysFilter:(NSArray<NSString *> *)xmpKeysFilter
+- (int)copyMetadataFrom:(NSString *)srcPath
+                     to:(NSString *)destPath
+           softwareName:(nullable NSString *)softwareName
+         exifKeysFilter:(NSArray<NSString *> *)exifKeysFilter
+          xmpKeysFilter:(NSArray<NSString *> *)xmpKeysFilter
 {
   std::string cppSrcPath = [srcPath UTF8String];
   std::string cppDestPath = [destPath UTF8String];
@@ -340,10 +367,10 @@ public:
     cppXmpKeysFilter.push_back([key UTF8String]);
   }
   
-  return _privateImpl->copyExif(cppSrcPath, cppDestPath,
-                                cppSoftwareName,
-                                cppExifKeysFilter,
-                                cppXmpKeysFilter);
+  return _privateImpl->copyMetadata(cppSrcPath, cppDestPath,
+                                    cppSoftwareName,
+                                    cppExifKeysFilter,
+                                    cppXmpKeysFilter);
 }
 
 - (int)copyICCProfileFrom:(NSString *)srcPath to:(NSString *)destPath {

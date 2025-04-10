@@ -22,11 +22,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSDictionary<NSString *, NSString *> *)getMetadata:(NSString *)filePath
                                              exiv2Ids:(NSArray<NSString *> *)tagIds;
 
-- (int)copyExifFrom:(NSString *)srcPath
-                 to:(NSString *)destPath
-       softwareName:(nullable NSString *)softwareName
-     exifKeysFilter:(NSArray<NSString *> *)exifKeysFilter
-      xmpKeysFilter:(NSArray<NSString *> *)xmpKeysFilter;
+- (int)copyMetadataFrom:(NSString *)srcPath
+                     to:(NSString *)destPath
+           softwareName:(nullable NSString *)softwareName
+         exifKeysFilter:(NSArray<NSString *> *)exifKeysFilter
+          xmpKeysFilter:(NSArray<NSString *> *)xmpKeysFilter;
 
 - (int)copyICCProfileFrom:(NSString *)srcPath to:(NSString *)destPath;
 
