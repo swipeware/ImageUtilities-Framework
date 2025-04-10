@@ -36,7 +36,7 @@ public:
     refSize(),            // default-initialized (width=0, height=0)
     scaleFactor(1.0f)
   {
-    NSLog(@"INFO: Initialized ImageAligner");
+    // Intentionally empty
   }
   
   cv::Mat getLoresTransformImageFor(const cv::Mat& inputImage) {
@@ -334,7 +334,7 @@ public:
 }
 
 - (void)dealloc {
-  NSLog(@"INFO: deallocated ImageAligner");
+  // Intentionally empty
 }
 
 - (void)setReferenceImage:(NSString*)referenceImagePath outputPath:(NSString*)outputPath isPreview:(BOOL)isPreview {

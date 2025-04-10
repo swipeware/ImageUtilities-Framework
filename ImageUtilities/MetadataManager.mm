@@ -23,7 +23,7 @@ private:
 
 public:
   MetadataManagerPrivate() {
-    NSLog(@"INFO: initialized MetadataManager");
+    // Intentionally empty
   }
   
   std::unique_ptr<Exiv2::Image> openExifFile(const std::string& imagePath) {
@@ -295,7 +295,7 @@ public:
 }
 
 - (void)dealloc {
-  NSLog(@"INFO: deallocated MetadataManager");
+  // Intentionally empty
 }
 
 - (NSDictionary<NSString *, NSString *> *)getMetadata:(NSString *)filePath
