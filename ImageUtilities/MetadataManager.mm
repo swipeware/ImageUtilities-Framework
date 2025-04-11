@@ -276,20 +276,6 @@ public:
         }
       }
       
-      for (Exiv2::ExifData::iterator it = exifData.begin(); it != exifData.end(); ++it) {
-        // Get the key (tag) and value as std::string
-        std::string key = it->key();
-        std::string value = it->toString();
-        NSLog(@"Key: %@", [NSString stringWithUTF8String:key.c_str()]);
-      }
-
-      for (Exiv2::XmpData::iterator it = xmpData.begin(); it != xmpData.end(); ++it) {
-        // Get the key (tag) and value as std::string
-        std::string key = it->key();
-        std::string value = it->toString();
-        NSLog(@"Key: %@", [NSString stringWithUTF8String:key.c_str()]);
-      }
-
       destImg->setExifData(exifData);
       destImg->clearXmpData();
       destImg->setXmpData(xmpData);
