@@ -176,6 +176,18 @@ public:
     return false;
   }
   
+  template <typename Metadata>
+  void filterMetadata(Metadata& data, const std::vector<std::string>& prefixes, bool keepMatching = true) {
+    for (auto it = data.begin(); it != data.end(); ) {
+      bool match = startsWithAny(it->key(), prefixes);
+      if ((keepMatching && !match) || (!keepMatching && match)) {
+        it = data.erase(it);
+      } else {
+        ++it;
+      }
+    }
+  }
+  
   int copyMetadata(const std::string& srcPath, const std::string& destPath,
                    const std::string& softwareName,
                    std::vector<std::string>& exifKeysFilter,
@@ -187,33 +199,44 @@ public:
       if (!srcImg || !destImg) return -1;
       
       srcImg->readMetadata();
-      
-      // We need to remove the orientation tag as it's already been used when creating the processed image
-      xmpKeysFilter.emplace_back("Xmp.tiff.Orientation");
-      xmpKeysFilter.emplace_back("Xmp.exif.Orientation");
-      xmpKeysFilter.emplace_back("Xmp.xmp.Rotate");
-      exifKeysFilter.emplace_back("Exif.Image.Orientation");
 
       Exiv2::ExifData exifData = srcImg->exifData();
       Exiv2::XmpData xmpData = srcImg->xmpData();
       Exiv2::IptcData iptcData = srcImg->iptcData();
-      
+            
       // Keep only essential EXIF metadata
-      std::vector<std::string> allowedExifPrefixes = {
-        "Exif.Image.",
-        "Exif.Photo.",
+      std::vector<std::string> allowedExifTags = {
+        "Exif.Image.Make",
+        "Exif.Image.Model",
+        "Exif.Photo.ExposureProgram",
+        "Exif.Photo.ISOSpeedRatings",
+        "Exif.Photo.SensitivityType",
+        "Exif.Photo.RecommendedExposureIndex",
+        "Exif.Photo.ExifVersion",
+        "Exif.Photo.DateTimeOriginal",
+        "Exif.Photo.DateTimeDigitized",
+        "Exif.Photo.MaxApertureValue",
+        "Exif.Photo.MeteringMode",
+        "Exif.Photo.Flash",
+        "Exif.Photo.FocalLegth",
+        "Exif.Photo.ColorSpace",
+        "Exif.Photo.FocalPlaneXResolution",
+        "Exif.Photo.FocalPlaneYResolution",
+        "Exif.Photo.FocalPlaneResolutionUnit",
+        "Exif.Photo.ExposureMode",
+        "Exif.Photo.WhiteBalance",
+        "Exif.Photo.SceneCaptureType",
+        "Exif.Photo.BodySerialNumber",
+        "Exif.Photo.LensSpecification",
+        "Exif.Photo.LensModel",
+        "Exif.Photo.LensSerialNmber",
+        "Exif.Image.UniqueCameraModel",
+        "Exif.Image.CameraSerialNumber",
+        "Exif.Image.LensInfo",
         "Exif.GPSInfo."
       };
+      filterMetadata(exifData, allowedExifTags); // Keep tags in filter
 
-      for (auto it = exifData.begin(); it != exifData.end(); ) {
-        if (!startsWithAny(it->key(), allowedExifPrefixes)) {
-          it = exifData.erase(it);
-        }
-        else {
-          ++it;
-        }
-      }
-      
       // Keep only essential XMP metadata
       std::vector<std::string> allowedXmpPrefixes = {
         "Xmp.dc.",
@@ -222,33 +245,28 @@ public:
         "Xmp.xmp.",
         "Xmp.xmpRights."
       };
+      filterMetadata(xmpData, allowedXmpPrefixes); // Keep tags in filter
 
-      for (auto it = xmpData.begin(); it != xmpData.end(); ) {
-        if (!startsWithAny(it->key(), allowedXmpPrefixes)) {
-          it = xmpData.erase(it);
-        }
-        else {
-          ++it;
-        }
-      }
       
-      // Remove specified Exif keys
-      for (const auto& exifKey : exifKeysFilter) {
-        Exiv2::ExifKey key(exifKey);
-        auto pos = exifData.findKey(key);
-        if (pos != exifData.end()) {
-          exifData.erase(pos);
-        }
-      }
+      // Additional XMP filters for removal to avoid metadata conficts
+      std::vector<std::string> additionalXmpFilter = {
+        "Xmp.tiff.Orientation", // Remove the orientation tags
+        "Xmp.exif.Orientation", // as they're already used when
+        "Xmp.xmp.Rotate",       // creating the processed image
+        "Xmp.dc.format",
+        "Xmp.xmp.ModifyDate",
+        "Xmp.xmp.MetadataDate",
+        "Xmp.xmp.CreatorTool"
+      };
+      xmpKeysFilter.insert(xmpKeysFilter.begin(), additionalXmpFilter.begin(), additionalXmpFilter.end());
+      filterMetadata(xmpData, xmpKeysFilter, false); // Remove tags in filter
       
-      // Remove specified xmp keys
-      for (const auto& xmpKey : xmpKeysFilter) {
-        Exiv2::XmpKey key(xmpKey);
-        auto pos = xmpData.findKey(key);
-        if (pos != xmpData.end()) {
-          xmpData.erase(pos);
-        }
-      }
+      // Additional EXIF filters for removal to avoid metadata conficts
+      std::vector<std::string> additionalExifFilter = {
+        "Exif.Image.Orientation" // Remove the orientation tag
+      };
+      exifKeysFilter.insert(exifKeysFilter.begin(), additionalExifFilter.begin(), additionalExifFilter.end());
+      filterMetadata(exifData, exifKeysFilter, false); // Remove tags in filter
       
       // Brand with software name
       if (!softwareName.empty()) {
@@ -258,9 +276,24 @@ public:
         }
       }
       
-      destImg->clearMetadata();
+      for (Exiv2::ExifData::iterator it = exifData.begin(); it != exifData.end(); ++it) {
+        // Get the key (tag) and value as std::string
+        std::string key = it->key();
+        std::string value = it->toString();
+        NSLog(@"Key: %@", [NSString stringWithUTF8String:key.c_str()]);
+      }
+
+      for (Exiv2::XmpData::iterator it = xmpData.begin(); it != xmpData.end(); ++it) {
+        // Get the key (tag) and value as std::string
+        std::string key = it->key();
+        std::string value = it->toString();
+        NSLog(@"Key: %@", [NSString stringWithUTF8String:key.c_str()]);
+      }
+
       destImg->setExifData(exifData);
+      destImg->clearXmpData();
       destImg->setXmpData(xmpData);
+      destImg->clearIptcData();
       destImg->setIptcData(iptcData);
       destImg->writeMetadata();
       
