@@ -208,6 +208,9 @@ public:
       std::vector<std::string> allowedExifTags = {
         "Exif.Image.Make",
         "Exif.Image.Model",
+        "Exif.Image.UniqueCameraModel",
+        "Exif.Image.CameraSerialNumber",
+        "Exif.Image.LensInfo",
         "Exif.Photo.ExposureProgram",
         "Exif.Photo.ISOSpeedRatings",
         "Exif.Photo.SensitivityType",
@@ -218,7 +221,9 @@ public:
         "Exif.Photo.MaxApertureValue",
         "Exif.Photo.MeteringMode",
         "Exif.Photo.Flash",
-        "Exif.Photo.FocalLegth",
+        "Exif.Photo.FocalLength",
+        "Exif.Photo.FNumber",
+        "Exif.Photo.ApertureValue",
         "Exif.Photo.ColorSpace",
         "Exif.Photo.FocalPlaneXResolution",
         "Exif.Photo.FocalPlaneYResolution",
@@ -230,9 +235,6 @@ public:
         "Exif.Photo.LensSpecification",
         "Exif.Photo.LensModel",
         "Exif.Photo.LensSerialNmber",
-        "Exif.Image.UniqueCameraModel",
-        "Exif.Image.CameraSerialNumber",
-        "Exif.Image.LensInfo",
         "Exif.GPSInfo."
       };
       filterMetadata(exifData, allowedExifTags); // Keep tags in filter
