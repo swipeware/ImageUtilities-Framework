@@ -400,13 +400,17 @@ public:
   catch (const std::runtime_error& e) {
     NSString *message = @(e.what());
     ImageAlignerError code = ImageAlignerErrorUnknown;
+    
     if ([message containsString:@"Failed to load input image"]) {
       code = ImageAlignerErrorLoadInputFailed;
-    } else if ([message containsString:@"Not enough keypoints"]) {
+    }
+    else if ([message containsString:@"Not enough keypoints"]) {
       code = ImageAlignerErrorNotEnoughKeypoints;
-    } else if ([message containsString:@"affine"]) {
+    }
+    else if ([message containsString:@"affine"]) {
       code = ImageAlignerErrorAlignmentFailed;
     }
+    
     if (error) {
       *error = [NSError errorWithDomain:ImageAlignerErrorDomain
                                    code:code
