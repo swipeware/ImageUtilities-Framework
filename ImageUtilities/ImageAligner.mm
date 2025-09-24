@@ -13,6 +13,18 @@
 #include "opencv2/calib3d.hpp"
 #include "tiffio.h"
 
+
+NSErrorDomain const ImageAlignerErrorDomain = @"com.swipeware.ImageAligner";
+
+typedef NS_ERROR_ENUM(ImageAlignerErrorDomain, ImageAlignerError) {
+  ImageAlignerErrorUnknown = 1,
+  ImageAlignerErrorLoadReferenceFailed = 2,
+  ImageAlignerErrorNotEnoughKeypoints = 3,
+  ImageAlignerErrorAlignmentFailed = 4,
+  ImageAlignerErrorLoadInputFailed = 5,
+  ImageAlignerErrorSaveFailed = 6,
+};
+
 // Private internal class to handle OpenCV
 namespace {
 
@@ -175,8 +187,7 @@ public:
     // Load the reference image in color
     cv::Mat referenceImage = loadLargestTIFFImage(imagePath);
     if (referenceImage.empty()) {
-      NSLog(@"ERROR: Failed to load reference image");
-      return;
+      throw std::runtime_error("Failed to load reference image.");
     }
     
     refSize.width = referenceImage.cols;
@@ -200,8 +211,7 @@ public:
     
     // Validate Keypoints
     if (refKeypoints.size() < 10) {
-      NSLog(@"ERROR: Not enough keypoints detected for reliable alignment");
-      return;
+      throw std::runtime_error("Not enough keypoints detected for reliable alignment.");
     }
     
     saveTIFFWithAlpha(referenceImage, outputFilePath);
@@ -337,32 +347,88 @@ public:
   // Intentionally empty
 }
 
-- (void)setReferenceImage:(NSString*)referenceImagePath outputPath:(NSString*)outputPath isPreview:(BOOL)isPreview {
-  if (!referenceImagePath) {
-    NSLog(@"ERROR: referenceImagePath is nil");
-    return;
+// ImageAligner.mm
+- (BOOL)setReferenceImage:(NSString*)referenceImagePath
+               outputPath:(NSString*)outputPath
+                isPreview:(BOOL)isPreview
+                    error:(NSError **)error
+{
+  if (referenceImagePath.length == 0) {
+    if (error) {
+      *error = [NSError errorWithDomain:ImageAlignerErrorDomain
+                                   code:ImageAlignerErrorLoadReferenceFailed
+                               userInfo:@{ NSLocalizedDescriptionKey : @"referenceImagePath is empty." }];
+    }
+    return NO;
   }
   
   try {
-    _privateImpl->setReferenceImage([referenceImagePath UTF8String], [outputPath UTF8String], isPreview);
+    _privateImpl->setReferenceImage([referenceImagePath UTF8String],
+                                    [outputPath UTF8String],
+                                    isPreview);
+    return YES;
   }
-  catch (NSException *ex) {
-    NSLog(@"ERROR: Cannot set reference image: %@ %@", referenceImagePath, ex.reason);
+  catch (const std::exception& e) {
+    if (error) {
+      *error = [NSError errorWithDomain:ImageAlignerErrorDomain
+                                   code:ImageAlignerErrorLoadReferenceFailed
+                               userInfo:@{ NSLocalizedDescriptionKey : @(e.what()) }];
+    }
+    return NO;
   }
   catch (...) {
-    NSLog(@"ERROR: Unknown error occurred in setReferenceImage");
+    if (error) {
+      *error = [NSError errorWithDomain:ImageAlignerErrorDomain
+                                   code:ImageAlignerErrorUnknown
+                               userInfo:@{ NSLocalizedDescriptionKey : @"Unknown error in setReferenceImage." }];
+    }
+    return NO;
   }
 }
 
-- (void)alignImage:(NSString*)imagePath outputPath:(NSString*)outputPath isPreview:(BOOL)isPreview {
+- (BOOL)alignImage:(NSString*)imagePath
+        outputPath:(NSString*)outputPath
+         isPreview:(BOOL)isPreview
+             error:(NSError **)error
+{
   try {
-    _privateImpl->alignImage([imagePath UTF8String], [outputPath UTF8String], isPreview);
+    _privateImpl->alignImage([imagePath UTF8String],
+                             [outputPath UTF8String],
+                             isPreview);
+    return YES;
   }
-  catch (NSException *ex) {
-    NSLog(@"ERROR: Cannot align image: %@ %@", imagePath, ex.reason);
+  catch (const std::runtime_error& e) {
+    NSString *message = @(e.what());
+    ImageAlignerError code = ImageAlignerErrorUnknown;
+    if ([message containsString:@"Failed to load input image"]) {
+      code = ImageAlignerErrorLoadInputFailed;
+    } else if ([message containsString:@"Not enough keypoints"]) {
+      code = ImageAlignerErrorNotEnoughKeypoints;
+    } else if ([message containsString:@"affine"]) {
+      code = ImageAlignerErrorAlignmentFailed;
+    }
+    if (error) {
+      *error = [NSError errorWithDomain:ImageAlignerErrorDomain
+                                   code:code
+                               userInfo:@{ NSLocalizedDescriptionKey : message }];
+    }
+    return NO;
+  }
+  catch (const std::exception& e) {
+    if (error) {
+      *error = [NSError errorWithDomain:ImageAlignerErrorDomain
+                                   code:ImageAlignerErrorUnknown
+                               userInfo:@{ NSLocalizedDescriptionKey : @(e.what()) }];
+    }
+    return NO;
   }
   catch (...) {
-    NSLog(@"ERROR: Unknown error occurred in alignImage");
+    if (error) {
+      *error = [NSError errorWithDomain:ImageAlignerErrorDomain
+                                   code:ImageAlignerErrorUnknown
+                               userInfo:@{ NSLocalizedDescriptionKey : @"Unknown error in alignImage." }];
+    }
+    return NO;
   }
 }
 

@@ -19,8 +19,15 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)init NS_UNAVAILABLE; // Not needed as initWithError is the main initializer
 - (nullable instancetype)initWithError:(NSError **)error NS_DESIGNATED_INITIALIZER NS_SWIFT_NAME(init()) ;
 
-- (void)setReferenceImage:(NSString*)referenceImagePath outputPath:(NSString*)outputPath isPreview:(BOOL)isPreview;
-- (void)alignImage:(NSString*)imagePath outputPath:(NSString*)outputPath isPreview:(BOOL)isPreview;
+- (BOOL)setReferenceImage:(NSString*)referenceImagePath
+               outputPath:(NSString*)outputPath
+                isPreview:(BOOL)isPreview
+                    error:(NSError **)error;
+
+- (BOOL)alignImage:(NSString*)imagePath
+        outputPath:(NSString*)outputPath
+         isPreview:(BOOL)isPreview
+             error:(NSError **)error;
 
 @end
 
