@@ -19,7 +19,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)init NS_UNAVAILABLE; // Not needed as initWithError is the main initializer
 - (nullable instancetype)initWithError:(NSError **)error NS_DESIGNATED_INITIALIZER NS_SWIFT_NAME(init()) ;
 
-- (NSDictionary<NSString *, NSString *> *)getMetadata:(NSString *)filePath
+- (nullable NSDictionary<NSString *, NSString *> *)getMetadata:(NSString *)filePath
                                              exiv2Ids:(NSArray<NSString *> *)tagIds;
 
 - (int)copyMetadataFrom:(NSString *)srcPath

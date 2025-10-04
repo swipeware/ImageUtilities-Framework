@@ -9,7 +9,15 @@
 #include "exiv2/exiv2.hpp"
 
 // Private internal class
-namespace {
+namespace
+{
+
+enum class MetadataManagerResult {
+  Success = 0,
+  Error,
+  NoICCProfile,
+  SrcOrDestMissing
+};
 
 class MetadataManagerPrivate {
 private:
@@ -196,7 +204,7 @@ public:
     try {
       std::unique_ptr<Exiv2::Image> srcImg = Exiv2::ImageFactory::open(srcPath);
       std::unique_ptr<Exiv2::Image> destImg = Exiv2::ImageFactory::open(destPath);
-      if (!srcImg || !destImg) return -1;
+      if (!srcImg || !destImg) return (int)MetadataManagerResult::SrcOrDestMissing;
       
       srcImg->readMetadata();
 
@@ -234,7 +242,7 @@ public:
         "Exif.Photo.BodySerialNumber",
         "Exif.Photo.LensSpecification",
         "Exif.Photo.LensModel",
-        "Exif.Photo.LensSerialNmber",
+        "Exif.Photo.LensSerialNumber",
         "Exif.GPSInfo."
       };
       filterMetadata(exifData, allowedExifTags); // Keep tags in filter
@@ -285,10 +293,10 @@ public:
       destImg->setIptcData(iptcData);
       destImg->writeMetadata();
       
-      return 1; // Success
+      return (int)MetadataManagerResult::Success;
     }
     catch (...) {
-      return 0; // Error
+      return (int)MetadataManagerResult::Error;
     }
   }
   
@@ -296,7 +304,7 @@ public:
     try {
       std::unique_ptr<Exiv2::Image> srcImg = Exiv2::ImageFactory::open(srcPath);
       std::unique_ptr<Exiv2::Image> destImg = Exiv2::ImageFactory::open(destPath);
-      if (!srcImg || !destImg) return -1;
+      if (!srcImg || !destImg) return (int)MetadataManagerResult::SrcOrDestMissing;
       
       srcImg->readMetadata();
       destImg->readMetadata();
@@ -304,17 +312,17 @@ public:
       // Check if source image has an ICC profile
       Exiv2::DataBuf iccProfile = srcImg->iccProfile();
       if (iccProfile.size() == 0) {
-        return 2; // No ICC profile in source image
+        return (int)MetadataManagerResult::NoICCProfile;
       }
       
       // Copy the ICC profile to destination
       destImg->setIccProfile(std::move(iccProfile));
       destImg->writeMetadata();
       
-      return 1; // Success
+      return (int)MetadataManagerResult::Success;
     }
     catch (...) {
-      return 0; // Error
+      return (int)MetadataManagerResult::Error;
     }
   }
   
@@ -356,16 +364,26 @@ public:
     cppTagIds.push_back([tag UTF8String]);
   }
   
-  std::unordered_map<std::string, std::string> exifData = _privateImpl->getMetadata(cppFilePath, cppTagIds);
-  
-  NSMutableDictionary<NSString *, NSString *> *result = [NSMutableDictionary dictionary];
-  for (const auto& pair : exifData) {
-    NSString *key = [NSString stringWithUTF8String:pair.first.c_str()];
-    NSString *value = [NSString stringWithUTF8String:pair.second.c_str()];
-    result[key] = value;
+  try {
+    std::unordered_map<std::string, std::string> exifData = _privateImpl->getMetadata(cppFilePath, cppTagIds);
+    
+    NSMutableDictionary<NSString *, NSString *> *result = [NSMutableDictionary dictionary];
+    for (const auto& pair : exifData) {
+      NSString *key = [NSString stringWithUTF8String:pair.first.c_str()];
+      NSString *value = [NSString stringWithUTF8String:pair.second.c_str()];
+      result[key] = value;
+    }
+    
+    return result;
   }
-
-  return result;
+  catch (const std::runtime_error &e) {
+    NSLog(@"ERROR: getMetadata failed: %s", e.what());
+    return nil;
+  }
+  catch (...) {
+    NSLog(@"ERROR: getMetadata failed: unknown error");
+    return nil;
+  }
 }
 
 - (int)copyMetadataFrom:(NSString *)srcPath
@@ -395,10 +413,10 @@ public:
 }
 
 - (int)copyICCProfileFrom:(NSString *)srcPath to:(NSString *)destPath {
-    std::string cppSrcPath = [srcPath UTF8String];
-    std::string cppDestPath = [destPath UTF8String];
-
-    return _privateImpl->copyICCProfile(cppSrcPath, cppDestPath);
+  std::string cppSrcPath = [srcPath UTF8String];
+  std::string cppDestPath = [destPath UTF8String];
+  
+  return _privateImpl->copyICCProfile(cppSrcPath, cppDestPath);
 }
 
 @end
